@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🚀 AI Network System</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: radial-gradient(circle, #050505, #000);
+            color: #00fff7;
+            font-family: 'Segoe UI';
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 45px;
+            margin: 20px 0;
+            text-shadow: 0 0 25px #00fff7;
+        }
+
+        .dashboard {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .grid {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .card {
+            padding: 25px;
+            width: 220px;
+            border-radius: 15px;
+            background: rgba(0,255,255,0.05);
+            box-shadow: 0 0 25px #00fff7;
+            animation: glow 2s infinite alternate;
+            text-align: center;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 10px #00fff7; }
+            to { box-shadow: 0 0 40px #00fff7; }
+        }
+
+        /* GRAPH CONTAINER FIX */
+        .chart-container {
+            width: 90%;
+            max-width: 1000px;
+            margin-top: 40px;
+            padding: 20px;
+            border-radius: 15px;
+            background: rgba(0,255,255,0.03);
+            box-shadow: 0 0 20px #00fff7;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 400px !important;
+        }
+
+        .status {
+            text-align: center;
+            font-size: 30px;
+            margin-top: 20px;
+        }
+
+        .ai {
+            text-align: center;
+            font-size: 20px;
+            color: #ffcc00;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1> AI SELF-HEALING NETWORK</h1>
+
+<div class="dashboard">
+
+    <div class="grid">
+        <div class="card">
+            <h3>Packet Loss</h3>
+            <div id="loss">--</div>
+        </div>
+
+        <div class="card">
+            <h3>Latency</h3>
+            <div id="latency">--</div>
+        </div>
+    </div>
+
+    <!-- FIXED GRAPH CONTAINER -->
+    <div class="chart-container">
+        <canvas id="chart"></canvas>
+    </div>
+
+    <div class="status" id="status"></div>
+    <div class="ai" id="ai"></div>
+
+</div>
+
+<script>
+let ctx = document.getElementById('chart').getContext('2d');
+
+// Gradient effects
+let gradient1 = ctx.createLinearGradient(0, 0, 0, 400);
+gradient1.addColorStop(0, "rgba(0,255,255,1)");
+gradient1.addColorStop(1, "rgba(0,255,255,0)");
+
+let gradient2 = ctx.createLinearGradient(0, 0, 0, 400);
+gradient2.addColorStop(0, "rgba(255,0,255,1)");
+gradient2.addColorStop(1, "rgba(255,0,255,0)");
+
+let chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: [],
+        datasets: [
+            {
+                label: 'Latency',
+                data: [],
+                borderWidth: 3,
+                tension: 0.4,
+                borderColor: "#00fff7",
+                backgroundColor: gradient1,
+                fill: true,
+                pointRadius: 4
+            },
+            {
+                label: 'Packet Loss',
+                data: [],
+                borderWidth: 3,
+                tension: 0.4,
+                borderColor: "#ff00ff",
+                backgroundColor: gradient2,
+                fill: true,
+                pointRadius: 4
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false, // IMPORTANT FIX
+        plugins: {
+            legend: {
+                labels: {
+                    color: "#00fff7"
+                }
+            }
+        },
+        scales: {
+            x: {
+                ticks: { color: "#00fff7" },
+                grid: { color: "rgba(0,255,255,0.1)" }
+            },
+            y: {
+                ticks: { color: "#00fff7" },
+                grid: { color: "rgba(0,255,255,0.1)" }
+            }
+        }
+    }
+});
+
+function fetchData() {
+    fetch('/data')
+    .then(res => res.json())
+    .then(data => {
+        if (!data) return;
+
+        document.getElementById('loss').innerText = data.loss;
+        document.getElementById('latency').innerText = data.latency;
+        document.getElementById('status').innerText = data.status;
+        document.getElementById('ai').innerText = "🤖 " + data.ai_msg;
+
+        let time = new Date().toLocaleTimeString();
+
+        chart.data.labels.push(time);
+        chart.data.datasets[0].data.push(data.latency);
+        chart.data.datasets[1].data.push(data.loss);
+
+        if (chart.data.labels.length > 15) {
+            chart.data.labels.shift();
+            chart.data.datasets.forEach(ds => ds.data.shift());
+        }
+
+        chart.update();
+    });
+}
+
+setInterval(fetchData, 2000);
+</script>
+
+</body>
+</html>
